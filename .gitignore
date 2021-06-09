@@ -1,0 +1,11 @@
+# ignore these archive files
+*.Rproj
+**/.Rproj.user
+**/.Rhistory
+**/.Rdata
+**/.DS_Store
+# ignore file in data and output due to its size
+data/*
+output/*
+# make exception for all .md file
+!**/*.md
