@@ -10,5 +10,5 @@
 data/*
 output/*
 # make exception for all .md file
-!**/*.md
+!**/README.md
 .Rproj.user
