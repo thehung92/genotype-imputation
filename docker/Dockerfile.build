@@ -1,0 +1,60 @@
+####################################################
+# Stage 1 - docker container to build minimac3     #
+####################################################
+FROM debian:9 AS builder
+WORKDIR /opt/
+RUN apt-get update && apt-get install -y \
+    autoconf \
+    build-essential \
+    git \
+    libncurses5-dev \
+    pkg-config \
+    unzip \
+    wget curl \
+    python python-dev \
+    libbz2-dev \
+    liblzma-dev \
+    zlib1g-dev \
+    && apt-get clean \
+     && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# build minimac3
+WORKDIR /opt/
+RUN wget ftp://share.sph.umich.edu/minimac3/Minimac3.v2.0.1.tar.gz  && \
+  tar -xzvf Minimac3.v2.0.1.tar.gz  && \
+  cd Minimac3/  && \
+  make
+# docker build --target builder -t test:alpha - < Dockerfile.build
+
+####################################################
+# Stage 2 - docker container to build minimac4     #
+####################################################
+FROM debian:9 AS builder2
+WORKDIR /opt/
+RUN apt-get update && apt-get install -y build-essential zlib1g-dev cmake procps ln && \
+    pip install cget  && apt-get clean -y 
+RUN cget install --prefix /opt/Minimac4 statgen/Minimac4
+# docker build --target builder2 -t test:beta - < Dockerfile.build
+
+#####################################################
+# Stage 3 - docker container to extract binary file #
+#####################################################
+FROM continuumio/miniconda3:latest AS final
+LABEL MAINTAINER="thehung, thehung92phuyen@gmail.com"
+# copy binary file for minimac3
+COPY --from=test:alpha /opt/Minimac3/bin/ /opt/Minimac3/bin/
+RUN ln -s /opt/Minimac3/bin/Minimac3 /usr/local/bin/minimac3
+# copy binary file for minimac4
+COPY --from=test:beta /opt/Minimac4/cget/pkg/statgen__Minimac4/install/bin/ /opt/Minimac4/bin/
+RUN ln -s /opt/Minimac4/bin/minimac4 /usr/local/bin/minimac4
+# debug for minimac4
+RUN apt-get update && apt-get install -y libgomp1
+# docker build --target final -t test:gamma - < Dockerfile.build
+# docker run --rm -it test:gamma bash
+
+#####################################################
+# Stage optional - save binary files in volumes     #
+#####################################################
+# docker volume create binary-files
+# docker run --rm -v binary-files:/mnt/ -it test:gamma bash
+# # cp -r /opt/Minimac* /mnt/

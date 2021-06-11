@@ -3,9 +3,11 @@
 **/.Rproj.user
 **/.Rhistory
 **/.Rdata
+# ignore on macOS
 **/.DS_Store
 # ignore file in data and output due to its size
 data/*
 output/*
 # make exception for all .md file
 !**/*.md
+.Rproj.user

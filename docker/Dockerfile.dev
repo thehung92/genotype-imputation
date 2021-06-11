@@ -1,0 +1,28 @@
+# build latest version of every required tools from existing images
+FROM continuumio/miniconda3:latest
+LABEL MAINTAINER="thehung, thehung92phuyen@gmail.com"
+# create virtual environment and install dependencies using conda
+COPY . /opt/tools/
+WORKDIR /opt/tools/
+RUN conda create -y --name biotools
+# make RUN commands use the new environment inside bash shell
+SHELL ["conda", "run", "-n", "biotools", "/bin/bash", "-c"]
+# update debian tools for various purpose
+RUN apt-get update \
+    && apt-get install -y wget \
+    && apt-get install -y zip \
+    && apt-get install -y less \
+    && apt-get install -y nano \
+    && apt-get install -y tree \
+    && apt-get install -y locales \
+    && sed -i -e '/en_US.UTF-8/ s/^#\s*//' /etc/locale.gen && locale-gen en_US.UTF-8 && update-locale LANG=en_US.utf-8
+# install minimac3 & minimac4
+WORKDIR /opt/
+RUN wget ftp://share.sph.umich.edu/minimac3/Minimac3Executable.tar.gz \
+    && tar -xzvf Minimac3Executable.tar.gz
+# RUN in the new environment to install R and required library in install-R-lib.R
+RUN conda install -y -c conda-forge/label/main r-base \
+    && Rscript install-R-lib.R
+# install core packages via conda
+RUN conda install -y -c bioconda/label/main bcftools \
+    && conda install -y -c bioconda/label/main shapeit4 \
