@@ -5,6 +5,7 @@
 **/.Rdata
 # ignore on macOS
 **/.DS_Store
+**/._*
 # ignore file in data and output due to its size
 data/*
 output/*
