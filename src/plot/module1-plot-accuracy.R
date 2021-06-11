@@ -110,4 +110,4 @@ OUTPUT="output/plot-table/high-quality-variants_5-ref-panel.png"
 ggsave(filename=OUTPUT, plot=p4, units="in", width=6, height=4, dpi=300)
 
 #
-save(list=c("p3", "p4"), file="branch-hgdp-p34.Rdata")
+save(list=c("p3", "p4"), file="output/branch-hgdp-p34.Rdata")

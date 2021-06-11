@@ -11,17 +11,17 @@ library(scales)
 #
 #### import dosage ####
 # PID
-INPUT="../output/HGDP-vn94.chr20_QC1.vcf.gz"
+INPUT="output/HGDP-vn94.chr20_QC1.vcf.gz"
 QUERY="source ~/.bashrc ; bcftools query -l"
 CMD=paste(QUERY, INPUT) # colnames
 vt0 <- fread(cmd=CMD, header=FALSE, col.names="PID") %>% unlist()
 # read all imputed file in a list of data frame
 registerDoParallel(8)
 #
-vt1 <-list.files("../output/", pattern="HGDP.*gz") %>% paste0("../output/", .)
+vt1 <-list.files("output/", pattern="HGDP.*gz") %>% paste0("output/", .)
 ldf <- foreach (i=vt1) %dopar% {
   INPUT=i
-  QUERY="source ~/.bashrc ; bcftools query -T ../output/masked.snps.list -f '%CHROM:%POS:%REF:%ALT[\t%GT]\n'"
+  QUERY="source ~/.bashrc ; bcftools query -T output/masked.snps.list -f '%CHROM:%POS:%REF:%ALT[\t%GT]\n'"
   CMD=paste(QUERY, INPUT)
   y <- fread(cmd=CMD, header=FALSE, sep="\t",
              col.names=c("ID", vt0))
@@ -122,12 +122,12 @@ dfplot <- df.pops %>% select(3:6) %>%
   left_join(dfplot, ., by="population")
 
 
-# mutate the number of error genotype to error rate
-dfplot %>%
-  mutate(KGP= KGP / (size*length(variants)) *100) %>%
-  mutate(VN404= VN404 / (size*length(variants)) *100) %>%
-  mutate(merge= merge / (size*length(variants)) *100) %>%
-  mutate(SG10K= SG10K / (size*length(variants)) *100) -> dfplot
+# # mutate the number of error genotype to error rate
+# dfplot %>%
+#   mutate(`1KGP3`= `1KGP3` / (size*length(variants)) *100) %>%
+#   mutate(VN404= VN404 / (size*length(variants)) *100) %>%
+#   mutate(merge= merge / (size*length(variants)) *100) %>%
+#   mutate(SG10K= SG10K / (size*length(variants)) *100) -> dfplot
 # edit region for plotting
 dfplot %>%
   mutate_at("region", ~gsub("Est_Asia","East_Asia", .)) %>%
@@ -186,16 +186,19 @@ p1 <- ggplot(data=dfplot2, aes(y=population)) +
         axis.title.y = element_blank(), axis.title.x = element_blank(),
         axis.ticks.x=element_blank(), axis.text.x= element_text(hjust=1))
 p12 <- ggarrange(p1, p2, ncol=2, labels="A", widths=c(2,2))
+# save Rdata
+OUTPUT="output/branch-hgdp-p12.Rdata"
+save(list=ls(pattern="^p\\d+"), file=OUTPUT)
 #
-save(list=ls(pattern="^p\\d+"), file="branch-hgdp-p12.Rdata")
-ggsave(filename="error-rate-hgdp-v2.png", plot=p12,
+OUTPUT="output/plot-table/error-rate-hgdp-v2.png"
+ggsave(filename=OUTPUT, plot=p12,
        device="png", units="in", width=6, height=6)
 #
 rm(list=ls())
 
 # load only 
-load("branch-hgdp-p12.Rdata")
-load("branch-hgdp-p34.Rdata")
+load("output/branch-hgdp-p12.Rdata")
+load("output/branch-hgdp-p34.Rdata")
 #
 p12 <- ggarrange(p1, p2, ncol=2, labels="A", widths=c(2,2))
 # import figure
@@ -204,5 +207,6 @@ p34 <- annotate_figure(p34, bottom=text_grob("Minor allele frequency groups"))
 
 # combine figure
 p_main <- ggarrange(p12, p34, ncol=2, nrow=1, widths = c(3,2))
-ggsave("main.png", plot=p_main, width=10, height=6, units="in", dpi=300)
+OUTPUT="output/plot-table/main-figure.png"
+ggsave(OUTPUT, plot=p_main, width=10, height=6, units="in", dpi=300)
 
